@@ -1,8 +1,8 @@
-import { useChat } from "ai/react";
+import { useChat } from "@ai-sdk/react";
 import { useState } from "react";
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
-import { PromptInput, PromptInputAttachments, PromptInputTextarea, PromptInputButton } from "@/components/ai-elements/prompt-input";
-import { Message } from "@/components/ai-elements/message";
+import { PromptInput, PromptInputAttachments, PromptInputTextarea, PromptInputButton, PromptInputAttachment } from "@/components/ai-elements/prompt-input";
+import { Message, MessageContent } from "@/components/ai-elements/message";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { BotIcon, SendIcon, SquarePen, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,6 @@ function App() {
   const { messages, input, handleInputChange, handleSubmit, isLoading, stop, setMessages } = useChat({
     api: "/api/chat",
   });
-
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden font-sans">
@@ -71,10 +69,13 @@ function App() {
                     messages.map((message) => (
                       <Message
                         key={message.id}
-                        role={message.role as "user" | "assistant"}
-                        content={message.content}
+                        from={message.role === 'user' ? 'user' : 'assistant'}
                         className={message.role === 'user' ? 'ml-auto max-w-[85%]' : 'mr-auto max-w-[85%]'}
-                      />
+                      >
+                        <MessageContent>
+                            {message.content}
+                        </MessageContent>
+                      </Message>
                     ))
                   )}
                 </ConversationContent>
@@ -90,7 +91,6 @@ function App() {
                     const e = { preventDefault: () => {} } as any;
                     handleSubmit(e, { body: { messages: [...messages, { role: 'user', content: text }] } });
                   }}
-                  isLoading={isLoading}
                   className="rounded-2xl border shadow-sm bg-muted/30 focus-within:bg-background focus-within:ring-1 focus-within:ring-ring transition-all"
                 >
                   <PromptInputTextarea
@@ -100,7 +100,9 @@ function App() {
                     className="min-h-[50px] max-h-[200px] resize-none border-0 shadow-none focus-visible:ring-0 bg-transparent py-4"
                   />
                   <div className="flex items-center justify-between p-2 pl-4">
-                    <PromptInputAttachments />
+                    <PromptInputAttachments>
+                        {(file) => <PromptInputAttachment key={file.id} data={file} />}
+                    </PromptInputAttachments>
                     <div className="flex items-center gap-2">
                       {isLoading ? (
                         <PromptInputButton onClick={stop} className="bg-muted hover:bg-muted/80 text-foreground">
